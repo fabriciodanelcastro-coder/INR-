@@ -1,0 +1,17 @@
+{
+  "name": "Registro de anticoagulación",
+  "short_name": "INR",
+  "description": "Registro personal de INR, dosis de acenocumarol, medicación y signos.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eaeff1",
+  "theme_color": "#1f5673",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
