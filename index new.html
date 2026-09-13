@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro de anticoagulación</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f5673">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="INR">
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+  :root {
+    --bg: #eaeff1;
+    --surface: #ffffff;
+    --ink: #16242e;
+    --ink-soft: #5b6b76;
+    --line: #d3dde2;
+    --steel: #1f5673;
+    --steel-soft: #cfdde6;
+    --in-range: #2f7a5b;
+    --in-range-bg: #e4f0ea;
+    --low: #b06a12;
+    --low-bg: #f7ecd9;
+    --high: #a83228;
+    --high-bg: #f7e3e1;
+    --hep: #7a4a86;
+    --hep-bg: #ede4f0;
+    --warn: #a83228;
+    --warn-bg: #f7e3e1;
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html { background: var(--steel); }
+
+  body {
+    margin: 0;
+    padding: env(safe-area-inset-top) 0 calc(3rem + env(safe-area-inset-bottom));
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 1rem; }
+
+  h1 {
+    font-family: var(--serif); font-size: 1.4rem; font-weight: 600;
+    margin: 1.25rem 0 0.25rem; letter-spacing: -0.01em;
+  }
+  .sub { color: var(--ink-soft); font-size: 0.85rem; margin: 0 0 1.25rem; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 1.1rem; margin-bottom: 1rem;
+  }
+  .card.aviso { background: var(--low-bg); border-color: #e8d3ae; }
+
+  .section-title {
+    font-family: var(--serif); font-size: 1rem; font-weight: 600; margin: 0 0 0.75rem;
+  }
+
+  .top { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+  .big {
+    font-family: var(--serif); font-size: 3.2rem; line-height: 1;
+    font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+
+  .badge { font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 20px; }
+  .badge.ok { color: var(--in-range); background: var(--in-range-bg); }
+  .badge.bajo { color: var(--low); background: var(--low-bg); }
+  .badge.alto { color: var(--high); background: var(--high-bg); }
+
+  .meta { color: var(--ink-soft); font-size: 0.85rem; margin-top: 0.5rem; }
+
+  .stats {
+    display: flex; gap: 1.4rem; margin-top: 1rem; padding-top: 0.9rem;
+    border-top: 1px solid var(--line); flex-wrap: wrap;
+  }
+  .stat-num { font-family: var(--serif); font-size: 1.4rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 0.75rem; color: var(--ink-soft); }
+
+  .bridge { border-left: 3px solid var(--hep); padding-left: 0.8rem; }
+  .bridge p { margin: 0.35rem 0; font-size: 0.88rem; }
+  .bridge .crit { color: var(--ink-soft); font-size: 0.8rem; margin-top: 0.6rem; }
+
+  .tipos { display: flex; gap: 0.35rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .tipo {
+    flex: 1; min-width: 70px; padding: 0.55rem 0.4rem;
+    border: 1px solid var(--line); background: #fbfcfd;
+    font-size: 0.85rem; color: var(--ink-soft); font-family: inherit;
+    border-radius: 8px; cursor: pointer;
+  }
+  .tipo[aria-pressed="true"] { background: var(--steel); border-color: var(--steel); color: #fff; font-weight: 600; }
+
+  .row { display: flex; gap: 0.6rem; }
+  .field { flex: 1; margin-bottom: 0.75rem; }
+  .field.grow2 { flex: 2; }
+
+  label { display: block; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 0.25rem; }
+
+  input, select, textarea {
+    width: 100%; padding: 0.6rem;
+    border: 1px solid var(--line); border-radius: 8px;
+    font-family: inherit; font-size: 16px; color: var(--ink); background: #fbfcfd;
+    -webkit-appearance: none; appearance: none;
+  }
+  select { background-image: none; }
+  textarea { resize: vertical; min-height: 3rem; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--steel); outline-offset: 1px;
+  }
+
+  .quick { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.85rem; }
+  .qbtn {
+    font-size: 0.82rem; padding: 0.35rem 0.7rem;
+    border: 1px solid var(--line); border-radius: 20px;
+    background: #fbfcfd; color: var(--ink-soft); cursor: pointer; font-family: inherit;
+  }
+  .qbtn.sel { background: var(--steel); border-color: var(--steel); color: #fff; }
+  .qbtn.hepq.sel { background: var(--hep); border-color: var(--hep); }
+
+  .alerta {
+    background: var(--warn-bg); color: var(--warn);
+    font-size: 0.82rem; padding: 0.55rem 0.7rem;
+    border-radius: 8px; margin-bottom: 0.85rem;
+  }
+
+  button { font-family: inherit; cursor: pointer; border-radius: 8px; }
+
+  .primary {
+    width: 100%; padding: 0.8rem; background: var(--steel); color: #fff;
+    border: none; font-size: 1rem; font-weight: 600;
+  }
+  .ghost {
+    padding: 0.55rem 0.85rem; background: #fbfcfd;
+    border: 1px solid var(--line); color: var(--ink); font-size: 0.85rem;
+  }
+  .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+  svg { display: block; width: 100%; height: auto; }
+  .chart-note { font-size: 0.75rem; color: var(--ink-soft); margin: 0.5rem 0 0; }
+
+  .dia { margin-bottom: 1.1rem; }
+  .dia:last-child { margin-bottom: 0; }
+  .dia-h {
+    font-size: 0.78rem; font-weight: 600; color: var(--ink-soft);
+    padding-bottom: 0.35rem; border-bottom: 1px solid var(--line); margin-bottom: 0.5rem;
+  }
+  .ev { display: flex; gap: 0.6rem; padding: 0.4rem 0; align-items: flex-start; }
+  .ev-h { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--ink-soft); min-width: 44px; padding-top: 0.1rem; }
+  .ev-b { flex: 1; font-size: 0.9rem; }
+  .ev-n { color: var(--ink-soft); font-size: 0.8rem; }
+
+  .pill {
+    display: inline-block; font-size: 0.7rem; font-weight: 600;
+    padding: 0.08rem 0.4rem; border-radius: 4px; margin-left: 0.35rem; vertical-align: 1px;
+  }
+  .pill.inr-ok { color: var(--in-range); background: var(--in-range-bg); }
+  .pill.inr-bajo { color: var(--low); background: var(--low-bg); }
+  .pill.inr-alto { color: var(--high); background: var(--high-bg); }
+  .pill.int { color: var(--warn); background: var(--warn-bg); }
+
+  .del { background: none; border: none; color: var(--ink-soft); font-size: 1.05rem; padding: 0 0.2rem; line-height: 1; }
+
+  .empty { color: var(--ink-soft); font-size: 0.9rem; text-align: center; padding: 1.5rem 0; }
+  .estado-guardado { font-size: 0.78rem; color: var(--ink-soft); margin: 0.7rem 0 0; }
+  .foot { font-size: 0.75rem; color: var(--ink-soft); text-align: center; padding: 0 1rem; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    background: var(--ink); color: #fff; font-size: 0.85rem;
+    padding: 0.6rem 1rem; border-radius: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    max-width: 90%; text-align: center; z-index: 10;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Registro de anticoagulación</h1>
+  <p class="sub">Acenocumarol · rango objetivo 2,0 – 3,0</p>
+
+  <div class="card aviso" id="backupAviso" hidden>
+    <div id="backupTxt"></div>
+    <div class="actions" style="margin-top:0.7rem">
+      <button class="ghost" id="avisoCopia">Guardar copia ahora</button>
+      <button class="ghost" id="avisoLuego">Más tarde</button>
+    </div>
+  </div>
+
+  <div class="card" id="topCard">
+    <div class="empty" id="topEmpty">Cargá tu primer evento para empezar.</div>
+    <div id="topBody" hidden>
+      <div class="top">
+        <span class="big" id="topInr">—</span>
+        <span class="badge" id="topBadge" hidden></span>
+      </div>
+      <div class="meta" id="topMeta"></div>
+      <div class="stats">
+        <div><div class="stat-num" id="dosisHoy">—</div><div class="stat-label">Sintrom, última dosis</div></div>
+        <div><div class="stat-num" id="semanaNum">—</div><div class="stat-label">Sintrom, últimos 7 días</div></div>
+        <div><div class="stat-num" id="ttrNum">—</div><div class="stat-label">Tiempo en rango</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="puenteCard" hidden>
+    <h2 class="section-title">Puente con heparina</h2>
+    <div class="bridge" id="puenteBody"></div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Cargar un evento</h2>
+
+    <div class="tipos" id="tipos">
+      <button type="button" class="tipo" data-t="med" aria-pressed="true">Medicación</button>
+      <button type="button" class="tipo" data-t="inr" aria-pressed="false">INR</button>
+      <button type="button" class="tipo" data-t="signo" aria-pressed="false">Signo</button>
+      <button type="button" class="tipo" data-t="nota" aria-pressed="false">Nota</button>
+    </div>
+
+    <div class="row">
+      <div class="field grow2"><label for="fecha">Fecha</label><input type="date" id="fecha"></div>
+      <div class="field"><label for="hora">Hora</label><input type="time" id="hora"></div>
+    </div>
+
+    <div id="quickWrap">
+      <label id="quickLabel">Frecuentes</label>
+      <div class="quick" id="quick"></div>
+    </div>
+
+    <div class="row" id="nombreRow">
+      <div class="field grow2" id="nombreField">
+        <label for="nombre" id="nombreLabel">Qué</label>
+        <input type="text" id="nombre" placeholder="Sintrom, heparina, ibuprofeno…">
+      </div>
+      <div class="field">
+        <label for="valor" id="valorLabel">Cantidad</label>
+        <input type="text" id="valor" inputmode="decimal" autocomplete="off" placeholder="2">
+      </div>
+      <div class="field" id="unidadField">
+        <label for="unidad">Unidad</label>
+        <select id="unidad">
+          <option>mg</option><option>ml</option><option>UI</option>
+          <option>comp</option><option>gotas</option><option>°C</option><option>µg</option><option>—</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row" id="presionRow" hidden>
+      <div class="field">
+        <label for="pAlta">Alta (máxima)</label>
+        <input type="text" id="pAlta" inputmode="decimal" autocomplete="off" placeholder="9,5">
+      </div>
+      <div class="field">
+        <label for="pBaja">Baja (mínima)</label>
+        <input type="text" id="pBaja" inputmode="decimal" autocomplete="off" placeholder="6,5">
+      </div>
+    </div>
+
+    <div class="alerta" id="alerta" hidden></div>
+
+    <div class="field">
+      <label for="notas">Observaciones</label>
+      <textarea id="notas" placeholder="Vía sublingual, fiebre, me sentí mareado…"></textarea>
+    </div>
+
+    <button class="primary" id="guardar">Guardar evento</button>
+  </div>
+
+  <div class="card" id="chartCard" hidden>
+    <h2 class="section-title">Evolución</h2>
+    <div id="chart"></div>
+    <p class="chart-note">Línea: INR. Barras: dosis de Sintrom. Marcas violetas: heparina. Marcas rojas: fármacos que pueden alterar el INR.</p>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Línea de tiempo</h2>
+    <div id="timeline"></div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Respaldo y traspaso</h2>
+    <div class="actions">
+      <button class="ghost" id="json">Guardar copia</button>
+      <button class="ghost" id="importar">Restaurar copia</button>
+      <button class="ghost" id="copiar">Copiar como texto</button>
+      <button class="ghost" id="csv">Bajar CSV</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json" hidden>
+    <p class="estado-guardado" id="estadoGuardado"></p>
+    <p class="estado-guardado" id="estadoCopia"></p>
+  </div>
+
+  <p class="foot">Los datos viven en este dispositivo. Es un registro personal: no reemplaza el control médico ni habilita a cambiar dosis por cuenta propia.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
