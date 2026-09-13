@@ -300,10 +300,11 @@
     <div class="actions">
       <button class="ghost" id="json">Guardar copia</button>
       <button class="ghost" id="importar">Restaurar copia</button>
+      <button class="ghost" id="pegar">Pegar copia</button>
       <button class="ghost" id="copiar">Copiar como texto</button>
       <button class="ghost" id="csv">Bajar CSV</button>
     </div>
-    <input type="file" id="fileInput" accept=".json,application/json" hidden>
+    <input type="file" id="fileInput" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
     <p class="estado-guardado" id="estadoGuardado"></p>
     <p class="estado-guardado" id="estadoCopia"></p>
   </div>

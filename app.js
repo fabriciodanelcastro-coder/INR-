@@ -626,13 +626,15 @@
 
     $('importar').addEventListener('click', function () { $('fileInput').click(); });
 
-    $('fileInput').addEventListener('change', function (ev) {
-      var file = ev.target.files[0];
-      if (!file) return;
-      var r = new FileReader();
-      r.onload = function () {
+    $('pegar').addEventListener('click', function () {
+      var t = prompt('Pegá acá el contenido del archivo de respaldo:');
+      if (t == null || !t.trim()) return;
+      restaurarTexto(t);
+    });
+
+    function restaurarTexto(texto) {
         try {
-          var arr = JSON.parse(r.result);
+          var arr = JSON.parse(texto);
           if (!Array.isArray(arr)) throw new Error('formato');
 
           if (datos.length) {
@@ -641,7 +643,6 @@
               datos = arr.filter(function (d) { return d && d.ts; });
               guardarYRender();
               aviso(datos.length + ' eventos restaurados (reemplazo)');
-              ev.target.value = '';
               return;
             }
           }
@@ -654,10 +655,20 @@
           datos = datos.concat(nuevos);
           guardarYRender();
           aviso(nuevos.length + ' eventos restaurados');
-        } catch (e) { aviso('El archivo no tiene el formato esperado.'); }
+        } catch (e) { aviso('El contenido no tiene el formato esperado.'); }
+    }
+
+    $('fileInput').addEventListener('change', function (ev) {
+      var file = ev.target.files[0];
+      if (!file) { aviso('No se pudo leer el archivo. Probá con "Pegar copia".'); return; }
+      var r = new FileReader();
+      r.onerror = function () { aviso('iOS no pudo abrir el archivo (¿está solo en iCloud?). Probá con "Pegar copia".'); };
+      r.onload = function () {
+        restaurarTexto(String(r.result || ''));
         ev.target.value = '';
       };
-      r.readAsText(file);
+      try { r.readAsText(file); }
+      catch (e) { aviso('No se pudo leer el archivo. Probá con "Pegar copia".'); }
     });
   }
 
