@@ -634,6 +634,18 @@
         try {
           var arr = JSON.parse(r.result);
           if (!Array.isArray(arr)) throw new Error('formato');
+
+          if (datos.length) {
+            var reemplazar = confirm('Aceptar: reemplazar TODO lo que tenés por el archivo (' + arr.length + ' eventos).\n\nCancelar: sumar solo los eventos que falten.');
+            if (reemplazar) {
+              datos = arr.filter(function (d) { return d && d.ts; });
+              guardarYRender();
+              aviso(datos.length + ' eventos restaurados (reemplazo)');
+              ev.target.value = '';
+              return;
+            }
+          }
+
           var vistos = {};
           datos.forEach(function (d) { vistos[d.ts + '|' + d.nombre + '|' + d.valor] = true; });
           var nuevos = arr.filter(function (d) {
