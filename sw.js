@@ -1,4 +1,4 @@
-var CACHE = 'anticoag-v6';
+var CACHE = 'anticoag-v8';
 var ARCHIVOS = [
   './',
   'index.html',

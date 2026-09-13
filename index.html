@@ -252,7 +252,7 @@
       </div>
       <div class="field">
         <label for="valor" id="valorLabel">Cantidad</label>
-        <input type="number" id="valor" step="0.01" inputmode="decimal" placeholder="2">
+        <input type="text" id="valor" inputmode="decimal" autocomplete="off" placeholder="2">
       </div>
       <div class="field" id="unidadField">
         <label for="unidad">Unidad</label>
@@ -260,6 +260,17 @@
           <option>mg</option><option>ml</option><option>UI</option>
           <option>comp</option><option>gotas</option><option>°C</option><option>µg</option><option>—</option>
         </select>
+      </div>
+    </div>
+
+    <div class="row" id="presionRow" hidden>
+      <div class="field">
+        <label for="pAlta">Alta (máxima)</label>
+        <input type="text" id="pAlta" inputmode="decimal" autocomplete="off" placeholder="9,5">
+      </div>
+      <div class="field">
+        <label for="pBaja">Baja (mínima)</label>
+        <input type="text" id="pBaja" inputmode="decimal" autocomplete="off" placeholder="6,5">
       </div>
     </div>
 

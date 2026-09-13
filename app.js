@@ -139,6 +139,7 @@
   function dias(a, b) { return Math.round((new Date(b + 'T00:00') - new Date(a + 'T00:00')) / 86400000); }
 
   function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function esPresion(n) { return norm(n).indexOf('presion') > -1 || norm(n).indexOf('tension') > -1; }
   function esSintrom(n) { var x = norm(n); return x.indexOf('sintrom') > -1 || x.indexOf('acenocumarol') > -1; }
   function esHeparina(n) { var x = norm(n); return x.indexOf('heparina') > -1 || x.indexOf('enoxaparina') > -1 || x.indexOf('clexane') > -1; }
   function interactua(n) {
@@ -345,8 +346,12 @@
           if (d.valor != null) cuerpo += ' ' + num(d.valor) + (d.unidad && d.unidad !== '—' ? ' ' + d.unidad : '');
           if (interactua(d.nombre)) cuerpo += '<span class="pill int">puede alterar el INR</span>';
         } else if (d.tipo === 'signo') {
-          cuerpo = esc(d.nombre) + ' <strong>' + (d.valor != null ? num(d.valor) : '') +
-                   (d.unidad && d.unidad !== '—' ? ' ' + d.unidad : '') + '</strong>';
+          if (d.valor2 != null) {
+            cuerpo = esc(d.nombre) + ' <strong>' + num(d.valor) + ' / ' + num(d.valor2) + '</strong>';
+          } else {
+            cuerpo = esc(d.nombre) + ' <strong>' + (d.valor != null ? num(d.valor) : '') +
+                     (d.unidad && d.unidad !== '—' ? ' ' + d.unidad : '') + '</strong>';
+          }
         } else {
           cuerpo = '<span class="ev-n">' + esc(d.notas || 'Nota') + '</span>';
         }
@@ -414,11 +419,9 @@
 
     if (esInr) {
       $('valorLabel').textContent = 'Valor de INR';
-      $('valor').step = '0.1';
       $('valor').placeholder = '2,4';
     } else {
       $('valorLabel').textContent = t === 'signo' ? 'Valor' : 'Cantidad';
-      $('valor').step = '0.01';
       $('valor').placeholder = t === 'signo' ? '37,8' : '2';
       $('nombreLabel').textContent = t === 'signo' ? 'Qué medís' : 'Qué';
       $('nombre').placeholder = t === 'signo' ? 'Temperatura, presión…' : 'Sintrom, heparina, ibuprofeno…';
@@ -427,7 +430,26 @@
     chequearAlerta();
   }
 
+  function soloDecimal(el) {
+    if (!el) return;
+    el.addEventListener('input', function () {
+      var v = el.value.replace(/[^0-9.,]/g, '');
+      var i = v.search(/[.,]/);
+      if (i > -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/[.,]/g, '');
+      if (v !== el.value) el.value = v;
+    });
+  }
+
+  function modoPresion() {
+    var on = tipoActual === 'signo' && esPresion($('nombre').value);
+    $('presionRow').hidden = !on;
+    $('valor').parentNode.hidden = on;
+    $('unidadField').hidden = on || tipoActual === 'inr';
+    return on;
+  }
+
   function chequearAlerta() {
+    modoPresion();
     var n = $('nombre').value.trim();
     var mostrar = tipoActual === 'med' && n && interactua(n);
     $('alerta').hidden = !mostrar;
@@ -462,7 +484,8 @@
       else if (d.tipo === 'nota') t += d.notas;
       else {
         t += d.nombre;
-        if (d.valor != null) t += ' ' + num(d.valor) + (d.unidad && d.unidad !== '—' ? ' ' + d.unidad : '');
+        if (d.valor2 != null) t += ' ' + num(d.valor) + ' / ' + num(d.valor2);
+        else if (d.valor != null) t += ' ' + num(d.valor) + (d.unidad && d.unidad !== '—' ? ' ' + d.unidad : '');
       }
       if (d.notas && d.tipo !== 'nota') t += ' — ' + d.notas;
       t += '\n';
@@ -505,22 +528,35 @@
     });
 
     $('nombre').addEventListener('input', chequearAlerta);
+    soloDecimal($('valor'));
+    soloDecimal($('pAlta'));
+    soloDecimal($('pBaja'));
 
     $('guardar').addEventListener('click', function () {
       var f = $('fecha').value, h = $('hora').value || '00:00';
       if (!f) { aviso('Falta la fecha.'); return; }
 
-      var vRaw = $('valor').value.replace(',', '.');
+      var vRaw = $('valor').value.trim().replace(/,/g, '.');
       var val = vRaw === '' ? null : parseFloat(vRaw);
+      var val2 = null;
       var nom = $('nombre').value.trim();
       var nts = $('notas').value.trim();
 
       if (tipoActual === 'inr') {
         if (val == null || isNaN(val) || val <= 0) { aviso('Poné un valor de INR válido.'); return; }
+        if (val > 10) {
+          if (!confirm('¿Seguro que el INR es ' + inr1(val) + '?\n\nSi quisiste poner ' + inr1(val / 10) + ', cancelá y corregí el valor.')) return;
+        }
         nom = 'INR';
       } else if (tipoActual === 'nota') {
         if (!nts) { aviso('Escribí la observación.'); return; }
         nom = 'Nota'; val = null;
+      } else if (tipoActual === 'signo' && esPresion(nom)) {
+        var alta = parseFloat($('pAlta').value.trim().replace(/,/g, '.'));
+        var baja = parseFloat($('pBaja').value.trim().replace(/,/g, '.'));
+        if (isNaN(alta) || isNaN(baja) || alta <= 0 || baja <= 0) { aviso('Poné los dos valores: alta y baja.'); return; }
+        if (alta <= baja) { aviso('La alta tiene que ser mayor que la baja. Revisá el orden.'); return; }
+        val = alta; val2 = baja;
       } else {
         if (!nom) { aviso('Falta indicar qué querés registrar.'); return; }
         if (val != null && isNaN(val)) { aviso('El valor no es un número válido.'); return; }
@@ -532,13 +568,15 @@
         tipo: tipoActual,
         nombre: nom,
         valor: val,
-        unidad: $('unidad').value,
+        valor2: val2,
+        unidad: val2 != null ? '—' : $('unidad').value,
         notas: nts
       });
 
       guardarYRender();
 
       $('valor').value = ''; $('nombre').value = ''; $('notas').value = '';
+      $('pAlta').value = ''; $('pBaja').value = '';
       $('hora').value = ahoraHora();
       Array.prototype.forEach.call(document.querySelectorAll('.qbtn'), function (x) { x.classList.remove('sel'); });
       chequearAlerta();
@@ -576,10 +614,10 @@
 
     $('csv').addEventListener('click', function () {
       if (!datos.length) { aviso('Todavía no hay nada para exportar.'); return; }
-      var c = 'fecha,hora,tipo,nombre,valor,unidad,observaciones\n';
+      var c = 'fecha,hora,tipo,nombre,valor,valor2,unidad,observaciones\n';
       datos.forEach(function (d) {
         c += [dia(d.ts), hora(d.ts), d.tipo, '"' + d.nombre + '"',
-              d.valor == null ? '' : d.valor, d.unidad || '',
+              d.valor == null ? '' : d.valor, d.valor2 == null ? '' : d.valor2, d.unidad || '',
               '"' + (d.notas || '').replace(/"/g, '""') + '"'].join(',') + '\n';
       });
       bajar('registro-anticoagulacion.csv', c, 'text/csv');
